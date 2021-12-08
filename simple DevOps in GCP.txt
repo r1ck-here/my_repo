@@ -1,0 +1,109 @@
+<body bgcolor="red"> </body>
+
+Source Repositories : create "devops-repo
+
+mkdir gcp
+cd gcp
+gcloud source repos clone devops-repo
+cd devops-repo
+
+in devops-repo
+ > main.py
+from flask import Flask, render_template, request
+app = Flask(__name__)
+@app.route("/")
+def main():
+    model = {"title": "Hello World!"}
+    return render_template('index.html', model=model)
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8080, debug=True, threaded=True)
+
+ > folder > templates
+ > layout.html
+<!doctype html>
+<html lang="en">
+<head>
+    <title>{{model.title}}</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        {% block content %}{% endblock %}
+        <footer></footer>
+    </div>
+</body>
+</html>
+
+ > index.html
+{% extends "layout.html" %}
+{% block content %}
+<div class="jumbotron">
+    <div class="container">
+        <h1>{{model.title}}</h1>
+    </div>
+</div>
+{% endblock %}
+
+
+> cd..
+ > requirements.txt
+Flask==1.1.1
+
+cd ~/gcp-course/devops-repo
+git add --all
+git config --global user.email "patrick.royce@accenture.com"
+git config --global user.name "patrick"
+git commit -am "initial commit"
+git push origin master
+
+cd ~/gcp-course/devops-repo
+sudo pip3 install -r requirements.txt
+python3 main.py
+~ web priview 
+stop | ctrl+C
+	modify main.py text, 
+git commit -am "second commit"
+git push origin master
+
+!! gcr.io/playground-s-11-d65b5318/devops-image
+
+DOCKER
+ > Dockerfile
+FROM python:3.7
+WORKDIR /app
+COPY . .			<< copy src code to current dir
+RUN pip install gunicorn
+RUN pip install -r requirements.txt
+ENV PORT=80
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 main:app
+
+Docker image with /gcr.io | container registry
+cd ~/gcp-course/devops-repo
+echo $DEVSHELL_PROJECT_ID	< pjt ID
+gcloud builds submit --tag gcr.io/$DEVSHELL_PROJECT_ID/devops-image:v0.1 .
+ > verify file from "container registry"
+
+Compute : create new VM : use img - gcr.io/image:v0.1 + allow http | test ext.IP
+cd ~/gcp-course/devops-repo
+git add --all	-a
+git commit -am "aded docker"
+git push origin master
+
+Automate build with TRIGGER
+container-registry ~ verify 
+Cloud build > build history
+trigger - create new
+  > devops-repo
+     .*
+     Dockerfile 	(build config)
+test > Run Trigger
+Scroll down - look @ logs
+Container Registry > see new service
+	>>> make changes to main.py
+  git add --all
+  git commit -am "file modify"
+  git push origin master
+
+> GOTO compute - use image, build VM + HTTP access - test
+
